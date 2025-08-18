@@ -1,7 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import Link from "next/link";
-
+ 
 export default function Hero({
   variant,
   sessionId,
@@ -56,12 +55,7 @@ export default function Hero({
             Join the beta
           </button>
 
-          <Link
-            href="/featured"
-            className="inline-flex items-center rounded-md border border-white/30 text-white px-5 py-3"
-          >
-            Become a featured profile
-          </Link>
+          
         </div>
       </div>
     </section>
