@@ -15,7 +15,7 @@ export default function Hero({
         s: "Surface your current asks on a card and get intros in days—not weeks.",
       },
       B: {
-        h: "Profiles with  .",
+        h: "Profiles with purpose.",
         s: "Add clear requests to your card and attract the right people faster.",
       },
       C: {
