@@ -1,12 +1,11 @@
 import { supabaseServer } from "@/lib/supabaseServer";
 import { isAdminAuthorized } from "@/lib/admin";
 
-// Row types matching selected columns
 type SubscriberRow = {
   id: string;
   email: string;
   source: string | null;
-  created_at: string; // ISO string from Supabase
+  created_at: string;
 };
 
 type FeaturedRow = {
@@ -23,37 +22,46 @@ type FeaturedRow = {
 type EventRow = {
   id: string;
   session_id: string;
-  event: string;
+  event:
+    | "page_view"
+    | "hero_click"
+    | "email_submit"
+    | "form_start"
+    | "form_complete"
+    | "example_click";
   variant: "A" | "B" | "C" | null;
   created_at: string;
 };
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+// CRITICAL: Next 15 passes searchParams as a Promise in Server Components
+export default async function AdminPage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  // Simple token gate via query param: /admin?token=YOUR_TOKEN
-  const urlParams = new URLSearchParams();
-  Object.entries(searchParams).forEach(([k, v]) => {
-    if (typeof v === "string") urlParams.set(k, v);
-  });
+  const sp = await props.searchParams;
 
-  if (!isAdminAuthorized(urlParams)) {
+  const usp = new URLSearchParams();
+  for (const [k, v] of Object.entries(sp)) {
+    if (typeof v === "string") usp.set(k, v);
+    else if (Array.isArray(v)) for (const val of v) usp.append(k, val);
+  }
+
+  if (!isAdminAuthorized(usp)) {
     return (
       <main className="max-w-6xl mx-auto px-4 py-10">
         <h1 className="text-2xl font-semibold">Admin</h1>
-        <p className="mt-2 text-red-600">Unauthorized. Append ?token=YOUR_TOKEN to the URL.</p>
+        <p className="mt-2 text-red-600">
+          Unauthorized. Append ?token=YOUR_TOKEN to the URL.
+        </p>
       </main>
     );
   }
 
-  // Fetch latest data
   const { data: subscribers } = await supabaseServer
     .from("subscribers")
     .select("id,email,source,created_at")
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(50)
+    .returns<SubscriberRow[]>();
 
   const { data: featured } = await supabaseServer
     .from("featured_applications")
@@ -61,13 +69,15 @@ export default async function AdminPage({
       "id,subscriber_id,name,role,primary_request,secondary_request,audience_channels,created_at"
     )
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(50)
+    .returns<FeaturedRow[]>();
 
   const { data: events } = await supabaseServer
     .from("events")
     .select("id,session_id,event,variant,created_at")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(100)
+    .returns<EventRow[]>();
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
@@ -86,12 +96,14 @@ export default async function AdminPage({
               </tr>
             </thead>
             <tbody>
-              {(subscribers ?? []).map((s: SubscriberRow) => (
+              {(subscribers ?? []).map((s) => (
                 <tr key={s.id} className="border-t">
                   <td className="p-2">{s.email}</td>
                   <td className="p-2">{s.source ?? "-"}</td>
                   <td className="p-2">{s.id}</td>
-                  <td className="p-2">{new Date(s.created_at).toLocaleString()}</td>
+                  <td className="p-2">
+                    {new Date(s.created_at).toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -115,15 +127,21 @@ export default async function AdminPage({
               </tr>
             </thead>
             <tbody>
-              {(featured ?? []).map((f: FeaturedRow) => (
+              {(featured ?? []).map((f) => (
                 <tr key={f.id} className="border-t">
                   <td className="p-2">{f.name}</td>
                   <td className="p-2">{f.role}</td>
                   <td className="p-2">{f.primary_request}</td>
-                  <td className="p-2">{(f.secondary_request ?? []).join(", ")}</td>
-                  <td className="p-2">{(f.audience_channels ?? []).join(", ")}</td>
+                  <td className="p-2">
+                    {(f.secondary_request ?? []).join(", ")}
+                  </td>
+                  <td className="p-2">
+                    {(f.audience_channels ?? []).join(", ")}
+                  </td>
                   <td className="p-2">{f.subscriber_id ?? "-"}</td>
-                  <td className="p-2">{new Date(f.created_at).toLocaleString()}</td>
+                  <td className="p-2">
+                    {new Date(f.created_at).toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -144,12 +162,14 @@ export default async function AdminPage({
               </tr>
             </thead>
             <tbody>
-              {(events ?? []).map((e: EventRow) => (
+              {(events ?? []).map((e) => (
                 <tr key={e.id} className="border-t">
                   <td className="p-2">{e.event}</td>
                   <td className="p-2">{e.variant ?? "-"}</td>
                   <td className="p-2">{e.session_id}</td>
-                  <td className="p-2">{new Date(e.created_at).toLocaleString()}</td>
+                  <td className="p-2">
+                    {new Date(e.created_at).toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function Hero({
   variant,
@@ -46,15 +47,23 @@ export default function Hero({
       <div className="max-w-5xl mx-auto px-4 py-20 text-center">
         <h1 className="text-4xl md:text-6xl font-semibold">{copy.h}</h1>
         <p className="mt-5 text-lg text-neutral-300">{copy.s}</p>
-        <button
-          onClick={onHeroClick}
-          className="mt-8 inline-flex items-center gap-2 rounded-md bg-white text-black px-5 py-3"
-        >
-          Join the beta
-        </button>
+
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <button
+            onClick={onHeroClick}
+            className="inline-flex items-center rounded-md bg-white text-black px-5 py-3"
+          >
+            Join the beta
+          </button>
+
+          <Link
+            href="/featured"
+            className="inline-flex items-center rounded-md border border-white/30 text-white px-5 py-3"
+          >
+            Become a featured profile
+          </Link>
+        </div>
       </div>
-      
     </section>
-    
   );
 }
